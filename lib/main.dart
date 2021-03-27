@@ -1,113 +1,149 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(AnimationApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+/// 动画示例主界面组件
+/// 该组件是有状态的, 因此需要定义 StatefulWidget 组件
+class AnimationApp extends StatefulWidget{
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+  _AnimationAppState createState() => _AnimationAppState();
+}
+
+/// 为 StatefulWidget 组件创建 State 类
+/// 每个 StatefulWidget 都需要一个配套的 State 类
+class _AnimationAppState extends State<AnimationApp>
+    with SingleTickerProviderStateMixin{
+
+  /// 动画类
+  Animation<double> animation;
+
+  /// 动画控制器
+  AnimationController animationController;
+
+  /// 动画状态
+  AnimationStatus animationStatus;
+
+  /// 动画值
+  /// 动画运行过程中, 动画计算出来的值
+  double animationValue;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    /// 1. 初始化动画控制器
+    animationController = AnimationController(
+      // 动画绘制到屏幕外部时, 减少消耗
+      vsync: this,
+      // 动画持续时间 2 秒
+      duration: Duration(seconds: 3),
     );
-  }
-}
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+    /// 2 . 构造 Tween 补间动画 ,
+    /// 设置动画控制器 AnimationController 给该补间动画
+    /// 动画的值是正方形组件的宽高
+    animation = Tween<double>(
+      begin: 0,
+      end: 300
+    ).animate(animationController)
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
-  final String title;
+    /// 3 . 添加动画值监听器
+    /// 该用法与 animation.addListener 效果是等价的
+    /// 这种写法比较简洁
+    /// 类似于链式调用, 上一行代码表达式必须是 animation, 结尾不能有分号
+    /// 特别注意 : 动画如果生效, 必须在监听器中调用 setState 方法
+    ..addListener(() {
 
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+      /// 调用 setState 方法后, 更新相关状态值后, 自动调用 build 方法重构组件界面
+      setState(() {
+        // 获取动画执行过程中的值
+        animationValue = animation.value;
+      });
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+    })
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+    /// 4 . 添加动画状态监听器
+    /// 设置动画状态监听器
+    ..addStatusListener((status) {
+      /// 调用 setState 方法后, 更新相关状态值后, 自动调用 build 方法重构组件界面
+      setState(() {
+        /// 获取动画状态
+        animationStatus = status;
+      });
     });
+
   }
+
+  /// 该方法与 initState 对应
+  @override
+  void dispose() {
+
+    /// 释放动画控制器
+    animationController.dispose();
+
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+
+    return Container(
+
+      /// 设置距离顶部 20 像素
+      margin: EdgeInsets.only(top: 100),
+
+      child: Column(
+        children: [
+
+          GestureDetector(
+            // 5 . 点击按钮开启动画
+            onTap: (){
+              /// 按钮点击事件
+              /// 首先将动画初始化
+              animationController.reset();
+
+              /// 正向执行动画, 即从初始值执行到结束值
+              animationController.forward();
+
+            },
+            child: Container(
+              alignment: Alignment.center,
+              color: Colors.green,
+              height: 50,
+              child: Text(
+                // 显示文本
+                "动画开始",
+                /// 文字方向 : 从左到右
+                textDirection: TextDirection.ltr,
+              ),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+          ),
+
+          
+          Text("动画状态 : $animationStatus", textDirection: TextDirection.ltr,),
+
+          Text("动画值 : ${animationValue?.round()}", textDirection: TextDirection.ltr,),
+
+          // 动画的主体组件
+          // 6 . 布局组件中使用动画的值 , 以达到动画效果
+          Container(
+            /// 设置距离顶部 20 像素
+            margin: EdgeInsets.only(top: 50),
+            height: animationValue,
+            width: animationValue,
+            decoration: BoxDecoration(color: Colors.red),
+          ),
+
+
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+
 }
