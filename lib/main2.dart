@@ -4,39 +4,6 @@ void main() {
   runApp(AnimationApp());
 }
 
-/// 1. 定义动画组件, 动画的组件封装在该组件中
-/// 使用 AnimatedWidget 快速实现一个动画
-class AnimatedApp extends AnimatedWidget{
-
-  /// 构造函数
-  AnimatedApp({Key key, Animation<double> animation})
-      :super(key: key, listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    /// 获取动画
-    Animation<double> animation = listenable;
-    return Column(
-      children: [
-        Text("动画状态 : ${animation.status}", textDirection: TextDirection.ltr,),
-
-        Text("动画值 : ${animation.value.round()}", textDirection: TextDirection.ltr,),
-
-        // 动画的主体组件
-        // 布局组件中使用动画的值 , 以达到动画效果
-        Container(
-          /// 设置距离顶部 20 像素
-          margin: EdgeInsets.only(top: 50),
-          height: animation.value,
-          width: animation.value,
-          decoration: BoxDecoration(color: Colors.red),
-        ),
-      ],
-    );
-
-  }
-}
-
 /// 动画示例主界面组件
 /// 该组件是有状态的, 因此需要定义 StatefulWidget 组件
 class AnimationApp extends StatefulWidget{
@@ -51,14 +18,23 @@ class _AnimationAppState extends State<AnimationApp>
 
   /// 动画类
   Animation<double> animation;
+
   /// 动画控制器
   AnimationController animationController;
+
+  /// 动画状态
+  AnimationStatus animationStatus;
+
+  /// 动画值
+  /// 动画运行过程中, 动画计算出来的值
+  double animationValue;
+
 
   @override
   void initState() {
     super.initState();
 
-    /// 2. 初始化动画控制器
+    /// 1. 初始化动画控制器
     animationController = AnimationController(
       // 动画绘制到屏幕外部时, 减少消耗
       vsync: this,
@@ -67,13 +43,39 @@ class _AnimationAppState extends State<AnimationApp>
     );
 
 
-    /// 3 . 构造 Tween 补间动画 ,
+    /// 2 . 构造 Tween 补间动画 ,
     /// 设置动画控制器 AnimationController 给该补间动画
     /// 动画的值是正方形组件的宽高
     animation = Tween<double>(
       begin: 0,
       end: 300
-    ).animate(animationController);
+    ).animate(animationController)
+
+
+    /// 3 . 添加动画值监听器
+    /// 该用法与 animation.addListener 效果是等价的
+    /// 这种写法比较简洁
+    /// 类似于链式调用, 上一行代码表达式必须是 animation, 结尾不能有分号
+    /// 特别注意 : 动画如果生效, 必须在监听器中调用 setState 方法
+    ..addListener(() {
+
+      /// 调用 setState 方法后, 更新相关状态值后, 自动调用 build 方法重构组件界面
+      setState(() {
+        // 获取动画执行过程中的值
+        animationValue = animation.value;
+      });
+
+    })
+
+    /// 4 . 添加动画状态监听器
+    /// 设置动画状态监听器
+    ..addStatusListener((status) {
+      /// 调用 setState 方法后, 更新相关状态值后, 自动调用 build 方法重构组件界面
+      setState(() {
+        /// 获取动画状态
+        animationStatus = status;
+      });
+    });
 
   }
 
@@ -123,9 +125,20 @@ class _AnimationAppState extends State<AnimationApp>
             ),
           ),
 
+          
+          Text("动画状态 : $animationStatus", textDirection: TextDirection.ltr,),
+
+          Text("动画值 : ${animationValue?.round()}", textDirection: TextDirection.ltr,),
+
           // 动画的主体组件
-          // 4 . 创建动画组件, 传入动画对象 animation
-          AnimatedApp(animation: animation,),
+          // 6 . 布局组件中使用动画的值 , 以达到动画效果
+          Container(
+            /// 设置距离顶部 20 像素
+            margin: EdgeInsets.only(top: 50),
+            height: animationValue,
+            width: animationValue,
+            decoration: BoxDecoration(color: Colors.red),
+          ),
 
 
         ],
