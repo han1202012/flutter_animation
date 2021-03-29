@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
-import 'dart:math' as math;
 
 void main() {
   runApp(
@@ -26,71 +25,22 @@ class HeroWidget extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Theme.of(context).primaryColor.withOpacity(0.25),
-      /// 按钮
-      child: InkWell(
-        /// 按钮点击事件
-        onTap: onTap,
-        child: LayoutBuilder(
-          builder: (context, size){
-            return Image.network(
-              imageUrl,
-              fit: BoxFit.contain,);
-          },
+    return SizedBox(
+      width: width,
+
+      /// 这里定义核心组件 Hero 组件 , 传入 tag 标识 , 与 Hero 动画作用的组件
+      child: Hero(tag: imageUrl, child: Material(
+        color: Colors.transparent,
+        /// 按钮
+        child: InkWell(
+          /// 按钮点击事件
+          onTap: onTap,
+          child: Image.network(imageUrl, fit: BoxFit.contain,),
         ),
-      ),
+      ),),
     );
   }
 }
-
-/// Hero 组件 , 径向动画扩展
-class RadialExpansion extends StatelessWidget {
-
-  final double maxRadius;
-
-  /// 该值需要动态计算
-  final clipRectSize;
-  final Widget child;
-
-  const RadialExpansion({
-    Key key,
-    this.maxRadius,
-    this.child
-  }) : clipRectSize = 2.0 * (maxRadius / math.sqrt2), super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipOval(
-      child: SizedBox(
-        width: clipRectSize,
-        height: clipRectSize,
-        child: ClipRect(
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class RadialExpansionDemo extends StatelessWidget {
-
-  /// 最小半径
-  static const double kMinRadius = 32.0;
-  /// 最大半径
-  static const double kMaxRadius = 128.0;
-
-  /// 动画差速器
-  static const opacityCurve = Interval(0.0, 0.75, curve: Curves.fastOutSlowIn);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
-}
-
-
-
 
 
 class HeroAnimation extends StatelessWidget{
